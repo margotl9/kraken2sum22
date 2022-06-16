@@ -1,0 +1,6 @@
+channels:
+  - bioconda
+  - defaults
+
+dependencies:
+  - bracken=2.6.1
