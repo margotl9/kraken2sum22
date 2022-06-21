@@ -48,19 +48,17 @@ rule kraken2:
         R1 = resources + "input/reads_ncbi_genomes_R1.fastq.gz", #forward reads
         R2 = resources + "input/reads_ncbi_genomes_R2.fastq.gz", #reverse seq reads
     output:
-        classification= "results/kraken2_classification.txt",
+        classification = "results/kraken2.kraken",
         report = "results/kraken2.kreport",
     params:
         db = resources + "kraken2db/",
-    log:
-        "results/kraken2.kraken"
-    container:
-        "docker://staphb/kraken2"
+    conda:
+        "workflow/envs/kraken2.yml"
     shell:
         """
         kraken2 --paired {input.R1} {input.R2} \
         --db {params.db} \
-        --report {output.report} > {log}
+        --report {output.report} > {output.classification}
         """
 
 
@@ -81,21 +79,20 @@ rule kraken2:
 
 rule bracken:
     input:
-        db = resources + "kraken2db/database150mers.kmer_distrib",
+        db = resources + "kraken2db/",
         report = "results/kraken2.kreport",
-        #kraken_class = "results/kraken2_classification.txt"
     output:
-        "results/bracken_abundances"
+        "results/bracken_abundances.bracken",
     conda:
         "workflow/envs/bracken.yml"
     shell:
         """
-        bracken --db {input.db} \
-        --input {input.report} \
-        -o {output}.bracken \ 
-        -r 150 -l p -t 10
+        bracken -d {input.db} \
+        -i {input.report} \
+        -o {output}.bracken \
+        -r 150 -l P -t 10
         """
 
 rule all:
     input: 
-        "results/bracken_abundances"
+        "results/bracken_abundances.bracken"
