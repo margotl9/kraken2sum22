@@ -1,45 +1,49 @@
 resources = "/Users/margotlavitt/resources/"
 
-# rule virome_db_download:
-#     output:
-#         resources + "virusdb/combined.fasta",
-#     shell:
-#         """
-#         # Download viral genome database (MGV)
-#         curl  https://portal.nersc.gov/MGV/MGV_v1.0_2021_07_08/mgv_votu_representatives.fna \
-#         -o /Users/margotlavitt/resources/virusdb/combined.fasta
-#         """
-
-
-rule kraken2db_download:
+rule virome_db_download:
     output:
-        resources + "kraken2db/hash.k2d",
-    params:
-        k2db_targz=resources + "kraken2db/k2_viral_20220607.tar.gz",
-        k2db_dir=resources + "kraken2db/",
+        resources + "virusdb/combined.fasta",
     shell:
         """
-        # Download viral minikraken database
-        curl  https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20220607.tar.gz \
-        -o {params.k2db_targz}
-
-        # Extract the tar.gz file
-        tar -xzf /Users/margotlavitt/resources/kraken2db/k2_viral_20220607.tar.gz \
-        -C {params.k2db_dir}
+        # Download viral genome database (MGV)
+        curl  https://portal.nersc.gov/MGV/MGV_v1.0_2021_07_08/mgv_votu_representatives.fna \
+        -o /Users/margotlavitt/resources/virusdb/combined.fasta
         """
 
-# build kraken database including custom virus database
-# rule kraken_build:
-#     input:
-#         resources + "virusdb/combined.fasta",
+
+# rule kraken2db_download:
 #     output:
-#         resources + "kraken2/combined.k2d",
-#     conda:
-#         "envs/kraken2.yml"
+#         resources + "kraken2db/hash.k2d",
+#     params:
+#         k2db_targz=resources + "kraken2db/k2_viral_20220607.tar.gz",
+#         k2db_dir=resources + "kraken2db/",
 #     shell:
 #         """
-#         kraken2-build --db combined
+#         # Download viral minikraken database
+#         curl  https://genome-idx.s3.amazonaws.com/kraken/k2_viral_20220607.tar.gz \
+#         -o {params.k2db_targz}
+
+#         # Extract the tar.gz file
+#         tar -xzf /Users/margotlavitt/resources/kraken2db/k2_viral_20220607.tar.gz \
+#         -C {params.k2db_dir}
 #         """
+
+# build kraken database including custom virus database
+rule kraken_build:
+    input:
+        resources + "virusdb/kraken_formatted_mgv.fasta",
+    output:
+        resources + "kraken2/combined.k2d",
+    params:
+        db = resources + "kraken2db/",
+    conda:
+        "workflow/envs/kraken2.yml"
+    shell:
+        """
+        kraken2-build --download-taxonomy --db {params.db}
+        kraken2-build --add-to-library {input} --db {params.db}
+        kraken2-build --build --db {params.db}
+        """
 
 #align reads to kraken database
 rule kraken2:
@@ -62,19 +66,20 @@ rule kraken2:
         """
 
 
-# rule bracken_build:
-#     input:
-#         # resources + "kraken2db/database150mers.kmer_distrib"
-#         #resources + "virusdb/combined.fasta" #create resources folder and define var
-#     output:
-#         resources + "bracken/virome_brackendb"
-#     threads: 1
-#     conda:
-#         "envs/bracken.yml"
-#     shell:
-#         """
-#         bracken-build --db {output} -t {threads} -k 35 -l 150
-#         """
+rule bracken_build:
+    input:
+        resources + "kraken2db/"
+        # resources + "kraken2db/database150mers.kmer_distrib"
+        #resources + "virusdb/combined.fasta" #create resources folder and define var
+    output:
+        resources + "bracken/virome_brackendb"
+    threads: 1
+    conda:
+        "envs/bracken.yml"
+    shell:
+        """
+        bracken-build --db {output} -t {threads} -k 35 -l 150
+        """
 
 
 rule bracken:
