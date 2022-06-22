@@ -1,4 +1,4 @@
-resources = "/home/carsonjm/resources/"
+resources = "/Users/margotlavitt/resources/"
 
 
 rule virome_db_download:
@@ -47,25 +47,25 @@ rule kraken_build:
         """
 
 
-# align reads to kraken database
-# rule kraken2:
-#     input:
-#         db=resources + "mgv_kraken2db/combined.k2d",
-#         R1=resources + "input/reads_ncbi_genomes_R1.fastq.gz",  #forward reads
-#         R2=resources + "input/reads_ncbi_genomes_R2.fastq.gz",  #reverse seq reads
-#     output:
-#         classification="results/kraken2.kraken",
-#         report="results/kraken2.kreport",
-#     params:
-#         db=resources + "kraken2db/",
-#     conda:
-#         "workflow/envs/kraken2.yml"
-#     shell:
-#         """
-#         kraken2 --paired {input.R1} {input.R2} \
-#         --db {params.db} \
-#         --report {output.report} > {output.classification}
-#         """
+#align reads to kraken database
+rule kraken2:
+    input:
+        db=resources + "mgv_kraken2db/hash.k2d",
+        R1=resources + "input/reads_ncbi_genomes_R1.fastq.gz",  #forward reads
+        R2=resources + "input/reads_ncbi_genomes_R2.fastq.gz",  #reverse seq reads
+    output:
+        classification="results/kraken2.kraken",
+        report="results/kraken2.kreport",
+    params:
+        db=resources + "mgv_kraken2db/",
+    conda:
+        "workflow/envs/kraken2.yml"
+    shell:
+        """
+        kraken2 --paired {input.R1} {input.R2} \
+        --db {params.db} \
+        --report {output.report} > {output.classification}
+        """
 
 
 # rule bracken_build:
