@@ -51,8 +51,8 @@ rule kraken_build:
 rule kraken2:
     input:
         db=resources + "mgv_kraken2db/hash.k2d",
-        R1=resources + "input/reads_ncbi_genomes_R1.fastq.gz",  #forward reads
-        R2=resources + "input/reads_ncbi_genomes_R2.fastq.gz",  #reverse seq reads
+        R1=resources + "input/Kraken_test_reads/enriched_ERR2155200_R1.fastq.gz",  #forward reads
+        R2=resources + "input/Kraken_test_reads/enriched_ERR2155200_R2.fastq.gz",  #reverse seq reads
     output:
         classification="results/kraken2.kraken",
         report="results/kraken2.kreport",
@@ -68,37 +68,39 @@ rule kraken2:
         """
 
 
-# rule bracken_build:
-#     input:
-#         resources + "kraken2db/",
-#         # resources + "kraken2db/database150mers.kmer_distrib"
-#         #resources + "virusdb/combined.fasta" #create resources folder and define var
-#     output:
-#         resources + "bracken/virome_brackendb",
-#     threads: 1
-#     conda:
-#         "envs/bracken.yml"
-#     shell:
-#         """
-#         bracken-build --db {output} -t {threads} -k 35 -l 150
-#         """
+rule bracken_build:
+    input:
+        resources + "mgv_kraken2db/hash.k2d",
+    output:
+        resources + "mgv_kraken2db/database150mers.kmer_distrib",
+    params:
+        db=resources + "mgv_kraken2db",
+    threads: 1
+    conda:
+        "workflow/envs/bracken.yml"
+    shell:
+        """
+        bracken-build -d {params.db} -t {threads} -k 35 -l 150
+        """
 
 
-# rule bracken:
-#     input:
-#         db=resources + "kraken2db/",
-#         report="results/kraken2.kreport",
-#     output:
-#         "results/bracken_abundances.bracken",
-#     conda:
-#         "workflow/envs/bracken.yml"
-#     shell:
-#         """
-#         bracken -d {input.db} \
-#         -i {input.report} \
-#         -o {output}.bracken \
-#         -r 150 -l P -t 10
-#         """
+rule bracken:
+    input:
+        db=resources + "mgv_kraken2db/database150mers.kmer_distrib",
+        report="results/kraken2.kreport",
+    output:
+        "results/bracken_abundances.bracken",
+    params:
+        db=resources + "mgv_kraken2db",
+    conda:
+        "workflow/envs/bracken.yml"
+    shell:
+        """
+        bracken -d {params.db} \
+        -i {input.report} \
+        -o {output} \
+        -r 150 -l F -t 10
+        """
 
 
 rule all:
