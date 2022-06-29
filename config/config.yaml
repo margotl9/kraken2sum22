@@ -1,0 +1,3 @@
+#resources path where downloads stored
+resources: "/Users/margotlavitt/resources/"
+results: "/Users/margotlavitt/Sum22/kraken2/results/"
