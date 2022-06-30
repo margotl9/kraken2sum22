@@ -160,7 +160,7 @@ rule kraken2:
 
 
 #----------------------------------------------------
-# Determine which viruses taxonomy and abundances
+# Determine viral taxonomy and abundances
 #----------------------------------------------------
 # Build custom bracken database and align reads
 rule bracken_build:
