@@ -1,3 +1,6 @@
+#----------------------------------------------------
+# Read Based Virus Alignment
+#----------------------------------------------------
 import pandas as pd
 configfile: "config/config.yaml"
 
@@ -18,6 +21,7 @@ rule symlink:
         ln -s {input.R2} {output.R2}
         """
 
+# Download viral reference
 rule virome_db_download:
     output:
         genomes=resources + "mgv_db/mgv_votu_reps.fasta",
@@ -46,6 +50,12 @@ rule customize_virus_headers:
         "workflow/notebooks/customize_virus_headers.py.ipynb"
 
 
+#----------------------------------------------------
+# Align reads
+#----------------------------------------------------
+#---------------------
+# Bowtie2
+#---------------------
 # Align reads to virus catalog using bowtie2
 rule build_bowtie2_db:
     input:
@@ -108,8 +118,10 @@ rule bowtie2:
         """
 
 
-
-# build kraken database including custom virus database
+#---------------------
+# Kraken2
+#---------------------
+# Build kraken database including custom virus database
 rule kraken_build:
     input:
         resources + "mgv_db/kraken_formatted_mgv.fasta",
@@ -126,7 +138,7 @@ rule kraken_build:
         kraken2-build --build --db {params.db}
         """
 
-#align reads to kraken database
+# Align reads to kraken database
 rule kraken2:
     input:
         db=resources + "mgv_kraken2db/hash.k2d",
@@ -147,6 +159,10 @@ rule kraken2:
         """
 
 
+#----------------------------------------------------
+# Determine which viruses taxonomy and abundances
+#----------------------------------------------------
+# Build custom bracken database and align reads
 rule bracken_build:
     input:
         resources + "mgv_kraken2db/hash.k2d",
@@ -162,7 +178,7 @@ rule bracken_build:
         bracken-build -d {params.db} -t {threads} -k 35 -l 150
         """
 
-
+# Determine which viruses are present and their abundances
 rule bracken:
     input:
         db=resources + "mgv_kraken2db/database150mers.kmer_distrib",
